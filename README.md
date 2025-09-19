@@ -70,3 +70,50 @@ Task<void> start_server(io_context &ioc, unsigned short port, Executor *pool) {
     }
 }
 ```
+
+
+## c++20协程原理
+
+下面代码，被翻译成普通函数调用
+```c++
+Task hello(){ 
+    //dosomething
+    co_return;
+}
+Task echo(){
+    co_await hello();
+}
+```
+大致等价与:
+```c++
+struct Frame_hello{
+    promise p;
+    frame f;
+    int idx;//恢复点
+    ...跨挂起点的其他状态
+}
+Task<void> echo(){
+    f = new Frame_hello
+    f.p = new promise
+    
+    echo_coro(f)
+
+    return task(f.p)
+}
+void echo_coro(f){
+    switch f.idx: 
+        case 0 break
+        case 1 goto p1
+        case 2 goto p2
+    ...
+    设置挂起点，保存变量状态，决定是否挂起，挂起就return,下次进入根据挂起点跳转。
+    ...
+}
+```
+
+为了直观理解，可以借助 [cppinsights](https://cppinsights.io/)工具，它能把协程前后的代码展开给你看。
+
+本仓库也整理了一些: [协程代码展开对比](coro.md)
+
+# 参考
+[cppref coroutine](https://en.cppreference.com/w/cpp/language/coroutines.html)
