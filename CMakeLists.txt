@@ -6,3 +6,9 @@ find_package(spdlog CONFIG REQUIRED)
 
 
 add_subdirectory(examples)
+
+
+if(BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

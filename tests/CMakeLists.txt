@@ -1,0 +1,20 @@
+add_library(doctest::doctest INTERFACE IMPORTED)
+target_include_directories(doctest::doctest INTERFACE doctest)
+
+include(${CMAKE_CURRENT_LIST_DIR}/doctest/doctest.cmake)
+# Make test executable
+add_library(tests-main STATIC main.cpp)
+target_compile_features(tests-main PRIVATE cxx_std_17)
+target_link_libraries(tests-main PRIVATE doctest::doctest)
+
+file(GLOB tests "test*.cpp")
+foreach(test ${tests})
+    get_filename_component(test_name ${test} NAME_WE)
+    add_executable(${test_name} ${test})
+    target_link_libraries(${test_name} PRIVATE tests-main)
+    string(REPLACE "_" " " test_prefix ${test_name})
+    if (NOT DEFINED ${test_name}_TIMEOUT)
+        set(${test_name}_TIMEOUT 30)
+    endif()
+    doctest_discover_tests(${test_name} TEST_PREFIX ${test_prefix}- PROPERTIES TIMEOUT ${${test_name}_TIMEOUT})
+endforeach()
